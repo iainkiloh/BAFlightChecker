@@ -1,0 +1,10 @@
+{
+  "name": "asp.net",
+  "private": true,
+  "dependencies": {
+    "knockout": "knockoutjs#v3.4.2",
+    "sammy": "v0.7.6",
+    "Knockout-Validation": "v1.0.2",
+    "moment": "2.20.1"
+  }
+}
