@@ -1,0 +1,216 @@
+﻿
+@{
+    ViewData["Title"] = "Flights Checker BA";
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+</script>
+
+
+<div class="container-fluid">
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs" data-bind="foreach: tabs" style="margin-bottom: 3px">
+        <li data-bind="css: { active: $data == $root.chosenTabId() }">
+            <a href="#" data-bind="text: $data,
+              css: { selected: $data == $root.chosenTabId() },
+              click: $root.goToTab"></a>
+        </li>
+    </ul>
+
+    <!-- alerts div -->
+    <div id="alertBox" class="alert alert-success" data-bind="fadeVisible: showAlert()">
+        <button type="button" class="close" data-bind="click: clearAlert()">&times;</button>
+        <p data-bind="text: alertText"></p>
+    </div>
+
+    <!-- Saved Low Cost Flight Offers View Markup -->
+    <div id="SavedOffersView" data-bind="visible: savedFlightOffersData().length > 0" class="table-responsive">
+        <table data-bind="with: savedFlightOffersData" class="table table-striped table-bordered table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th>Departure City</th>
+                    <th>Arrival City</th>
+                    <th>Cabin</th>
+                    <th>Travel Month</th>
+                    <th>Journey Type</th>
+                    <th>Price</th>
+                    <th>Date Added</th>
+                    <th>View</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: $data">
+                <tr>
+                    <td class="hidden" data-bind="text: id"></td>
+                    <td data-bind="text: departureCity"></td>
+                    <td data-bind="text: arrivalCity"></td>
+                    <td data-bind="text: cabin"></td>
+                    <td data-bind="text: travelMonth"></td>
+                    <td data-bind="text: journeyType"></td>
+                    <td data-bind="text: amount"></td>
+                    <td data-bind="text: moment(dateAdded).format('DD-MMM-YYYY')"></td>
+                    <td><input type="button" class="btn btn-primary" data-bind="click: $root.getFlightOfferData" value="View" /></td>
+                    <td><input type="button" class="btn btn-primary" data-bind="click: $root.deleteLowestFareFlightOffer" value="Delete" /></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- saved offers view paging -->
+        <div class="pull-left col-xs-12" style="border: solid 1px; color: lightgrey">         
+            <div class="table">
+                <div class="pull-left" style="color: black;">
+                    Displaying page <label data-bind="text: pageNumber"></label> of <label data-bind="text: totalPages"></label>
+                </div>
+                <table class="pull-right">
+                    <tr>
+                        <td>
+                            <button class="form-control btn-default" data-bind="click: pageSavedFlights.bind($data, 1)"><<</button>
+                        </td>
+                        <td>
+                            <button class="form-control btn btn-default" data-bind="click: pageSavedFlights.bind($data, pageNumber() - 1 > 0  ? pageNumber() - 1 : 1)"><</button>
+                        </td>
+                        <td>
+                            <select class="form-control" data-bind="options: pageSizeOptions,
+                           optionsText: 'displayText',
+                           optionsValue: 'id',
+                           value: selectedPageSize, event: { change: resetPagingInfo.bind($data,1) }"></select>
+                        </td>
+                        <td>
+                            <button class="form-control btn btn-default" data-bind="click: pageSavedFlights.bind($data, pageNumber() + 1 > totalPages() ? totalPages() : pageNumber() + 1)">></button>
+                        </td>
+                        <td>
+                            <button class="form-control btn btn-default" data-bind="click: pageSavedFlights.bind($data, totalPages())">>></button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            </div>
+            <!-- end saved offers paging -->
+        </div>
+
+    <!-- Search Low Cost Flight Offers View Markup -->
+    <div id="FindOffersView" data-bind="visible: ShowFlightOffers" class="form-group">
+        <div class="col-sm-12">
+            <div class="form-group col-sm-6">
+                <label class="hidden-xs">Destination</label>
+                <select class="form-control" data-bind="options: arrivalCities,
+                           optionsText: 'airportName',
+                           optionsValue: 'code',
+                           value: selectedArrivalCity,
+                           optionsCaption: 'Choose Destination...'"></select>
+            </div>
+            <div class="form-group col-sm-6">
+                <label class="hidden-xs">Journey Type</label>
+                <select class="form-control" data-bind="options: journeyTypes,
+                           optionsText: 'displayText',
+                           optionsValue: 'id',
+                           value: selectedJourneyType,
+                           optionsCaption: 'Choose Journey...'"></select>
+            </div>
+        </div>
+        <div class="col-sm-12">
+            <div class="form-group col-sm-6">
+                <label class="hidden-xs">Cabin</label>
+                <select class="form-control" data-bind="options: cabinTypes,
+                       optionsText: 'displayText',
+                       optionsValue: 'id',
+                       value: selectedCabinType,
+                       optionsCaption: 'Choose Cabin...'"></select>
+
+            </div>
+
+            <div class="form-group col-sm-6">
+                <label class="hidden-xs">Year Low / Month Low</label>
+                <select class="form-control" data-bind="options: ranges,
+                       optionsText: 'displayText',
+                       optionsValue: 'id',
+                       value: selectedRange,
+                       optionsCaption: 'Choose Range...'"></select>
+
+            </div>
+            </div>
+
+            <div class="form-group col-xs-12">
+                <input type="button" class="btn btn-primary pull-right" data-bind="click: $root.searchLowestFareOffers" value="Search" />
+            </div>
+
+            <div class="col-xs-12 table-responsive" data-bind="visible: chosenTabData().length > 0">
+                <table data-bind="with: chosenTabData" class="table table-striped table-bordered table-hover table-condensed">
+                    <thead>
+                        <tr>
+                            <th class="hidden-xs">Dept City</th>
+                            <th>Dept Airport</th>
+                            <th class="hidden-xs">Arrival City</th>
+                            <th>Arrival Airport</th>
+                            <th>Cabin</th>
+                            <th>Month</th>
+                            <th>Journey</th>
+                            <th>Price</th>
+                            <th>Currency</th>
+                            <th class="hidden-xs">Tax Included</th>
+                            <th>Add</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: $data">
+                        <tr>
+                            <td class="hidden-xs" data-bind="text: departureCity"></td>
+                            <td data-bind="text: departureCityCode"></td>
+                            <td class="hidden-xs" data-bind="text: arrivalCity"></td>
+                            <td data-bind="text: arrivalCityCode"></td>
+                            <td data-bind="text: cabin"></td>
+                            <td data-bind="text: travelMonth"></td>
+                            <td data-bind="text: journeyType"></td>
+                            <td data-bind="text: amount"></td>
+                            <td data-bind="text: currencyCode"></td>
+                            <td class="hidden-xs" data-bind="text: isTaxIncluded"></td>
+                            <td class="btn btn-primary" data-bind="click: $root.addLowestFareFlightOffer" data-toggle="tooltip" title="Add to Saved Offers">Add</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+        <!-- end search low cost flight offer view markup-->
+
+    <!-- saved individual flight offer view -->
+    <div id="SavedOfferView" data-bind="visible: chosenFlightOfferData() != null">
+        <div data-bind="with: chosenFlightOfferData">
+            <h4>Saved Flight Offer Detail</h4>
+            <div class="col-sm-6">
+                <p><label>Departure City</label>: <span data-bind="text: departureCity"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Departure City Code</label>: <span data-bind="text: departureCityCode"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Arrival City</label>: <span data-bind="text: arrivalCity"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Arrival City Code</label>: <span data-bind="text: arrivalCityCode"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Cabin</label>: <span data-bind="text: cabin"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Travel Month</label>: <span data-bind="text: travelMonth"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Journey Type</label>: <span data-bind="text: arrivalCity"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Amount</label>: £<span data-bind="text: amount"></span></p>
+            </div>
+            <div class="col-sm-6">
+                <p><label>Tax Included</label>: <span data-bind="text: isTaxIncluded"></span></p>
+            </div>
+        </div>
+    </div>
+    <!-- end saved individual flight offer view -->
+
+</div>
+
+
